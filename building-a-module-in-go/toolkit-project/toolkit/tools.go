@@ -62,6 +62,7 @@ func (t *Tools) UploadFiles(r *http.Request, uploadDir string, rename ...bool) (
 		for _, hdr := range fHeaders {
 			uploadedFiles, err = func(uploadedFiles []*UploadedFile) ([]*UploadedFile, error) {
 				var uploadedFile UploadedFile
+
 				inFile, err := hdr.Open()
 				if err != nil {
 					return nil, err
@@ -69,6 +70,7 @@ func (t *Tools) UploadFiles(r *http.Request, uploadDir string, rename ...bool) (
 				defer inFile.Close()
 
 				buff := make([]byte, 512)
+
 				_, err = inFile.Read(buff)
 				if err != nil {
 					return nil, err
