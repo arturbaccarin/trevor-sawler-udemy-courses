@@ -1,6 +1,9 @@
 package main
 
-import "net/url"
+import (
+	"net/url"
+	"strings"
+)
 
 type errors map[string][]string
 
@@ -32,9 +35,25 @@ func NewForm(data url.Values) *Form {
 
 func (f *Form) Has(field string) bool {
 	x := f.Data.Get(field)
-	if x == "" {
-		return false
-	}
+	return x != ""
+}
 
-	return true
+func (f *Form) Required(fields ...string) {
+	for _, field := range fields {
+		value := f.Data.Get(field)
+
+		if strings.TrimSpace(value) == "" {
+			f.Errors.Add(field, "This field cannot be blank")
+		}
+	}
+}
+
+func (f *Form) Check(ok bool, key, message string) {
+	if !ok {
+		f.Errors.Add(key, message)
+	}
+}
+
+func (f *Form) Valid() bool {
+	return len(f.Errors) == 0
 }
