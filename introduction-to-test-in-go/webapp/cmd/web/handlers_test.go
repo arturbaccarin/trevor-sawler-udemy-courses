@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -36,4 +39,79 @@ func Test_application_handlers(t *testing.T) {
 			t.Errorf("for %s: expected status %d, but got %d", e.name, e.expectedStatusCode, resp.StatusCode)
 		}
 	}
+}
+
+/*
+func Test_application_Home(t *testing.T) {
+	// create a request
+	req, _ := http.NewRequest("GET", "/", nil)
+
+	req = addContextAndSessionToRequest(req, app)
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(app.Home)
+
+	handler.ServeHTTP(rr, req)
+
+	// check status code
+	if rr.Code != http.StatusOK {
+		t.Error("test app home return wrong status code")
+	}
+
+	body, _ := io.ReadAll(rr.Body)
+	if !strings.Contains(string(body), `<small>From Session:`) {
+		t.Error("test not found correct text in html")
+	}
+}
+*/
+
+func Test_application_Home(t *testing.T) {
+	var tests = []struct {
+		name         string
+		putInSession string
+		expectedHTML string
+	}{
+		{"first visit", "", "<small>From Session:"},
+	}
+
+	for _, e := range tests {
+		req, _ := http.NewRequest("GET", "/", nil)
+
+		req = addContextAndSessionToRequest(req, app)
+		_ = app.Session.Destroy(req.Context())
+
+		if e.putInSession != "" {
+			app.Session.Put(req.Context(), "test", e.putInSession)
+		}
+
+		rr := httptest.NewRecorder()
+
+		handler := http.HandlerFunc(app.Home)
+
+		handler.ServeHTTP(rr, req)
+
+		// check status code
+		if rr.Code != http.StatusOK {
+			t.Error("test app home return wrong status code")
+		}
+
+		body, _ := io.ReadAll(rr.Body)
+		if !strings.Contains(string(body), `<small>From Session:`) {
+			t.Error("test not found correct text in html")
+		}
+	}
+}
+
+func getCtx(req *http.Request) context.Context {
+	ctx := context.WithValue(req.Context(), contextUserKey, "unknown")
+	return ctx
+}
+
+func addContextAndSessionToRequest(req *http.Request, app application) *http.Request {
+	req = req.WithContext(getCtx(req))
+
+	ctx, _ := app.Session.Load(req.Context(), req.Header.Get("X-Session"))
+
+	return req.WithContext(ctx)
 }
