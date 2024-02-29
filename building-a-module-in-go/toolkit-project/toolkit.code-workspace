@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "app-upload"
+		},
+		{
+			"path": "app-dir"
 		}
 	],
 	"settings": {}
