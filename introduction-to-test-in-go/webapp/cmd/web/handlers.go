@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -61,14 +60,30 @@ func (app *application) Login(w http.ResponseWriter, r *http.Request) {
 	form.Required("email", "password")
 
 	if !form.Valid() {
-		fmt.Fprint(w, "failed validation")
+		app.Session.Put(r.Context(), "error", "Invalid login credentials")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
 	email := r.Form.Get("email")
 	password := r.Form.Get("password")
 
-	log.Println(email, password)
+	user, err := app.DB.GetUserByEmail(email)
+	if err != nil {
+		app.Session.Put(r.Context(), "error", "Invalid login")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
 
-	fmt.Fprint(w, email)
+	// authemtica the user
+
+	// if not authenticated the redirect with error
+
+	// prevent fixation attack
+	_ = app.Session.RenewToken(r.Context())
+
+	// store success message in session
+
+	// redirect to some other page
+	http.Redirect(w, r, "/users/profile", http.StatusSeeOther)
 }
