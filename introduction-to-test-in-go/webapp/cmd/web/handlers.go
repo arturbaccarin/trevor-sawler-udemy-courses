@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path"
 	"time"
+	"webapp/pkg/data"
 )
 
 var pathToTemplates = "./templates/"
@@ -23,12 +24,19 @@ func (app *application) Home(w http.ResponseWriter, r *http.Request) {
 	_ = app.render(w, r, "home.page.gohtml", &TemplateData{Data: td})
 }
 
-type TemplateData struct {
-	IP   string
-	Data map[string]any
+func (app *application) Profile(w http.ResponseWriter, r *http.Request) {
+	_ = app.render(w, r, "profile.page.gohtml", &TemplateData{})
 }
 
-func (app *application) render(w http.ResponseWriter, r *http.Request, t string, data *TemplateData) error {
+type TemplateData struct {
+	IP    string
+	Data  map[string]any
+	Error string
+	Flash string
+	User  data.User
+}
+
+func (app *application) render(w http.ResponseWriter, r *http.Request, t string, td *TemplateData) error {
 	// parse the template from disk
 	parsedTemplate, err := template.ParseFiles(path.Join(pathToTemplates, t), path.Join(pathToTemplates, "base.layout.gohtml"))
 	if err != nil {
@@ -36,10 +44,13 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, t string,
 		return err
 	}
 
-	data.IP = app.ipFromContext(r.Context())
+	td.IP = app.ipFromContext(r.Context())
 
-	// execute temaplte, passing it data, if any
-	err = parsedTemplate.Execute(w, data)
+	td.Error = app.Session.PopString(r.Context(), "error")
+	td.Flash = app.Session.PopString(r.Context(), "flash")
+
+	// execute template, passing it data, if any
+	err = parsedTemplate.Execute(w, td)
 	if err != nil {
 		return err
 	}
@@ -75,6 +86,8 @@ func (app *application) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println(password, user.FirstName)
+
 	// authemtica the user
 
 	// if not authenticated the redirect with error
@@ -85,5 +98,6 @@ func (app *application) Login(w http.ResponseWriter, r *http.Request) {
 	// store success message in session
 
 	// redirect to some other page
+	app.Session.Put(r.Context(), "flash", "Succesfully logged in")
 	http.Redirect(w, r, "/users/profile", http.StatusSeeOther)
 }
