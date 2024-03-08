@@ -146,6 +146,35 @@ func Test_app_Login(t *testing.T) {
 				"email":    {"admin@example.com"},
 				"password": {"secret"},
 			},
+			expectedStatusCode: http.StatusSeeOther,
+			expectedLoc:        "/user/profile",
+		},
+		{
+			name: "missing form data",
+			postedData: url.Values{
+				"email":    {""},
+				"password": {""},
+			},
+			expectedStatusCode: http.StatusSeeOther,
+			expectedLoc:        "/",
+		},
+		{
+			name: "bad credentials",
+			postedData: url.Values{
+				"email":    {"admin@example.com"},
+				"password": {"password"},
+			},
+			expectedStatusCode: http.StatusSeeOther,
+			expectedLoc:        "/",
+		},
+		{
+			name: "user not found",
+			postedData: url.Values{
+				"email":    {"admin2@example.com"},
+				"password": {"secret"},
+			},
+			expectedStatusCode: http.StatusSeeOther,
+			expectedLoc:        "/",
 		},
 	}
 
@@ -159,6 +188,16 @@ func Test_app_Login(t *testing.T) {
 
 		if rr.Code != e.expectedStatusCode {
 			t.Errorf("%s: returned wrong status code; expected %d, but got %d", e.name, e.expectedStatusCode, rr.Code)
+		}
+
+		actualLoc, err := rr.Result().Location()
+		if err == nil {
+
+			if actualLoc.String() != e.expectedLoc {
+				t.Errorf("%s: expected location %s but got %s", e.name, e.expectedLoc, actualLoc.String())
+			}
+		} else {
+			t.Errorf("%s: no location header set", e.name)
 		}
 	}
 }

@@ -97,7 +97,7 @@ func (app *application) Login(w http.ResponseWriter, r *http.Request) {
 
 	// redirect to some other page
 	app.Session.Put(r.Context(), "flash", "Succesfully logged in")
-	http.Redirect(w, r, "/users/profile", http.StatusSeeOther)
+	http.Redirect(w, r, "/user/profile", http.StatusSeeOther)
 }
 
 func (app *application) authenticate(r *http.Request, user *data.User, password string) bool {
