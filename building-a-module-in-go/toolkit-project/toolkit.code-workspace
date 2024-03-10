@@ -20,6 +20,9 @@
 		},
 		{
 			"path": "app-download"
+		},
+		{
+			"path": "app-json"
 		}
 	],
 	"settings": {}
