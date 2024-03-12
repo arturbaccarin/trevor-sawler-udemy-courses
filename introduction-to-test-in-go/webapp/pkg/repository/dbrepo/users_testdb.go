@@ -37,7 +37,7 @@ func (m *TestDBRepo) GetUserByEmail(email string) (*data.User, error) {
 			FirstName: "Admin",
 			LastName:  "User",
 			Email:     "admin@example.com",
-			Password:  "$2a$14$ajq8Q7fbtFRQvXpdCq7Jcuy.Rx1h/L4J60Otx.gyNLbAYctGMJ9cF",
+			Password:  "$2a$14$ajq8Q7fbtFRQvXpdCq7Jcuy.Rx1h/L4J60Otx.gyNLbAYctGMJ9tK",
 			IsAdmin:   1,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),

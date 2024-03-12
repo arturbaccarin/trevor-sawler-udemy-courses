@@ -171,7 +171,7 @@ func Test_app_Login(t *testing.T) {
 				"password": {"secret"},
 			},
 			expectedStatusCode: http.StatusSeeOther,
-			expectedLoc:        "/",
+			expectedLoc:        "/user/profile",
 		},
 		{
 			name: "missing form data",
