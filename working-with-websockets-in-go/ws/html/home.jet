@@ -69,7 +69,19 @@
         socket = new WebSocket("ws://localhost:8080/ws");
 
         socket.onopen = () => {
-            console.log("succesfully connected")
+            console.log("succesfully connected");
+        }
+
+        socket.onclose = () => {
+            console.log("connection closed");
+        }
+
+        socket.onerror = error => {
+            console.log("there was an error");
+        }
+
+        scoket.onmessage = msg => {
+            console.log(msg);
         }
     });
 </script>
