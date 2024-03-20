@@ -80,8 +80,10 @@
             console.log("there was an error");
         }
 
-        scoket.onmessage = msg => {
+        socket.onmessage = msg => {
             console.log(msg);
+            let j = JSON.parse(msg.data);
+            console.log(j);
         }
     });
 </script>
