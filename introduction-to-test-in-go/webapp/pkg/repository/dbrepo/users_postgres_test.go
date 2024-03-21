@@ -1,3 +1,5 @@
+//go:build integration
+
 package dbrepo
 
 import (
@@ -16,6 +18,7 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 )
 
+// go test -v -tags=integration .
 var (
 	host     = "localhost"
 	user     = "postgres"
@@ -224,5 +227,46 @@ func TestPostgresDBRepoDeleteUser(t *testing.T) {
 	_, err = testRepo.GetUser(2)
 	if err == nil {
 		t.Error("retrieved user id 2, who should have been deleted")
+	}
+}
+
+func TestPostgresDBRepoResetPassword(t *testing.T) {
+	err := testRepo.ResetPassword(1, "password")
+	if err != nil {
+		t.Error("error resetting user's password", err)
+	}
+
+	user, _ := testRepo.GetUser(1)
+	matches, err := user.PasswordMatches("password")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !matches {
+		t.Error("password should match 'password', but does not")
+	}
+}
+
+func TestPostgresDBRepoInsertUserImage(t *testing.T) {
+	var image data.UserImage
+
+	image.UserID = 1
+	image.FileName = "test.jpg"
+	image.CreatedAt = time.Now()
+	image.UpdatedAt = time.Now()
+
+	newID, err := testRepo.InsertUserImage(image)
+	if err != nil {
+		t.Error("inserting user image failed:", err)
+	}
+
+	if newID != 1 {
+		t.Error("got wrong id for image; should be 1, but got", newID)
+	}
+
+	image.UserID = 100
+	_, err = testRepo.InsertUserImage(image)
+	if err == nil {
+		t.Error("inserted a user image with non-existent user id")
 	}
 }
