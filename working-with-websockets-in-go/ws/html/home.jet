@@ -7,6 +7,9 @@
     <title>Home</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
         integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/notie/4.3.1/notie.min.css"
+        integrity="sha512-UrjLcAek5jbj1vwGbXkviPHtgSNVNQCedX7cBIMDdSI2iZtUcZcoTh2Sqc8R9mVcijOjFUi1IlxhfrE1uWaIog=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         .chatbox {
             outline: 1px solid silver;
@@ -66,6 +69,10 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
     crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/notie/4.3.1/notie.min.js"
+    integrity="sha512-NHRCwRf2LnVSlLDejCA9oS3fG3/FLSQIPCjAWl3M7tVi5wszwr6FxkjotWnQDXLE+aLKcxRrzFDNEgXj9nvkPw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="/static/reconnecting-websocket.min.js"></script>
 
 <script>
     let socket = null;
@@ -74,7 +81,7 @@
     let messageField = document.getElementById("message");
 
     document.addEventListener("DOMContentLoaded", function () {
-        socket = new WebSocket("ws://localhost:8080/ws");
+        socket = new ReconnectingWebSocket("ws://localhost:8080/ws", null, { debug: true, reconnectInterval: 3000 });
 
         socket.onopen = () => {
             console.log("succesfully connected");
@@ -116,15 +123,14 @@
             }
         }
 
-        let userInput = document.getElementById("username");
-        userInput.addEventListener("change", function () {
+        userField.addEventListener("change", function () {
             let jsonData = {};
             jsonData["action"] = "username";
             jsonData["username"] = this.value;
             socket.send(JSON.stringify(jsonData));
         })
 
-        document.getElementById("message").addEventListener("keydown", function (event) {
+        messageField.addEventListener("keydown", function (event) {
             if (event.code == "Enter") {
                 if (!socket) {
                     console.log("no connection");
@@ -132,7 +138,7 @@
                 }
 
                 if ((userField.value === "") || (messageField.value === "")) {
-                    alert("fill out user and message");
+                    errorMessage("fill out user and message");
                     return false
                 } else {
                     sendMessage();
@@ -140,13 +146,12 @@
 
                 event.preventDefault();
                 event.stopPropagation();
-                sendMessage();
             }
         })
 
         document.getElementById("sendBtn").addEventListener("click", function () {
             if ((userField.value === "") || (messageField.value === "")) {
-                alert("fill out user and message");
+                errorMessage("fill out user and message");
                 return false
             } else {
                 sendMessage();
@@ -157,10 +162,17 @@
     function sendMessage() {
         let jsonData = {};
         jsonData["action"] = "broadcast";
-        jsonData["username"] = document.getElementById("username").value;
-        jsonData["message"] = document.getElementById("message").value;
+        jsonData["username"] = userField.value;
+        jsonData["message"] = messageField.value;
         socket.send(JSON.stringify(jsonData));
-        document.getElementById("message").value = "";
+        messageField.value = "";
+    }
+
+    function errorMessage(msg) {
+        notie.alert({
+            type: 'error',
+            text: msg,
+        })
     }
 </script>
 
