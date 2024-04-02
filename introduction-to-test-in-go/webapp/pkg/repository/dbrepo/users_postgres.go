@@ -66,11 +66,13 @@ func (m *PostgresDBRepo) GetUser(id int) (*data.User, error) {
 
 	query := `
 		select 
-			id, email, first_name, last_name, password, is_admin, created_at, updated_at 
+			users.id, users.email, users.first_name, users.last_name, users.password, users.is_admin, users.created_at, users.updated_at,
+			coalesce(users.file_name, '') 
 		from 
 			users 
+			left join user_images on (user_images.user_id = users.id)
 		where 
-		    id = $1`
+			users.id = $1`
 
 	var user data.User
 	row := m.DB.QueryRowContext(ctx, query, id)
@@ -84,6 +86,7 @@ func (m *PostgresDBRepo) GetUser(id int) (*data.User, error) {
 		&user.IsAdmin,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.ProfilePic.FileName,
 	)
 
 	if err != nil {
@@ -100,11 +103,13 @@ func (m *PostgresDBRepo) GetUserByEmail(email string) (*data.User, error) {
 
 	query := `
 		select 
-			id, email, first_name, last_name, password, is_admin, created_at, updated_at 
+			users.id, users.email, users.first_name, users.last_name, users.password, users.is_admin, users.created_at, users.updated_at,
+			coalesce(users.file_name, '') 
 		from 
 			users 
+			left join user_images on (user_images.user_id = users.id)
 		where 
-		    email = $1`
+			users.email = $1`
 
 	var user data.User
 	row := m.DB.QueryRowContext(ctx, query, email)
@@ -118,6 +123,7 @@ func (m *PostgresDBRepo) GetUserByEmail(email string) (*data.User, error) {
 		&user.IsAdmin,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.ProfilePic.FileName,
 	)
 
 	if err != nil {
