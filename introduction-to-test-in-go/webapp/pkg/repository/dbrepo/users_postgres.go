@@ -67,7 +67,7 @@ func (m *PostgresDBRepo) GetUser(id int) (*data.User, error) {
 	query := `
 		select 
 			users.id, users.email, users.first_name, users.last_name, users.password, users.is_admin, users.created_at, users.updated_at,
-			coalesce(users.file_name, '') 
+			coalesce(user_images.file_name, '') 
 		from 
 			users 
 			left join user_images on (user_images.user_id = users.id)
@@ -104,7 +104,7 @@ func (m *PostgresDBRepo) GetUserByEmail(email string) (*data.User, error) {
 	query := `
 		select 
 			users.id, users.email, users.first_name, users.last_name, users.password, users.is_admin, users.created_at, users.updated_at,
-			coalesce(users.file_name, '') 
+			coalesce(user_images.file_name, '') 
 		from 
 			users 
 			left join user_images on (user_images.user_id = users.id)
@@ -233,11 +233,17 @@ func (m *PostgresDBRepo) InsertUserImage(i data.UserImage) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
+	stmt := `delete from user_images where user_id = $1`
+	_, err := m.DB.ExecContext(ctx, stmt, i.UserID)
+	if err != nil {
+		return 0, err
+	}
+
 	var newID int
-	stmt := `insert into user_images (user_id, file_name, created_at, updated_at)
+	stmt = `insert into user_images (user_id, file_name, created_at, updated_at)
 		values ($1, $2, $3, $4) returning id`
 
-	err := m.DB.QueryRowContext(ctx, stmt,
+	err = m.DB.QueryRowContext(ctx, stmt,
 		i.UserID,
 		i.FileName,
 		time.Now(),
