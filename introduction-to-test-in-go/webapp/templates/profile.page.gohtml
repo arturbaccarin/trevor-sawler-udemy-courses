@@ -8,9 +8,10 @@
             <hr>
 
             {{if ne .User.ProfilePic.FileName ""}}
-
+            <img class="img-fluid" styçe="max=width: 300px;" src="/static/img/{{.User.ProfilePic.FileName}}"
+                alt="profile">
             {{else}}
-
+            <p>No profile image uploaded yet...</p>
             {{end}}
 
             <hr>
