@@ -53,6 +53,10 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, t string,
 	td.Error = app.Session.PopString(r.Context(), "error")
 	td.Flash = app.Session.PopString(r.Context(), "flash")
 
+	if app.Session.Exists(r.Context(), "user") {
+		td.User = app.Session.Get(r.Context(), "user").(data.User)
+	}
+
 	// execute template, passing it data, if any
 	err = parsedTemplate.Execute(w, td)
 	if err != nil {
@@ -147,7 +151,7 @@ func (app *application) UploadProfilePic(w http.ResponseWriter, r *http.Request)
 	app.Session.Put(r.Context(), "user", updatedUser)
 
 	// redirect back to profile page
-	http.Redirect(w, r, "/users/profile", http.StatusSeeOther)
+	http.Redirect(w, r, "/user/profile", http.StatusSeeOther)
 }
 
 type UploadedFiles struct {
