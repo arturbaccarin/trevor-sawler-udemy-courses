@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -48,7 +49,23 @@ func (app *application) authenticate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) refresh(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
+	refreshToken := r.Form.Get("refresh_token")
+	claims := &Claims{}
+
+	_, err = jwt.ParseWithClaims(refreshToken, claims, func(token *jwt.Token) (any, error) {
+		return []byte(app.JWTSecret), nil
+	})
+
+	if err != nil {
+		app.errorJSON(w, err, http.StatusBadRequest)
+		return
+	}
 }
 
 func (app *application) allUsers(w http.ResponseWriter, r *http.Request) {
