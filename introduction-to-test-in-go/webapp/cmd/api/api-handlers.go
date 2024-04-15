@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -66,6 +68,44 @@ func (app *application) refresh(w http.ResponseWriter, r *http.Request) {
 		app.errorJSON(w, err, http.StatusBadRequest)
 		return
 	}
+
+	if time.Unix(claims.ExpiresAt.Unix(), 0).Sub(time.Now()) > 30*time.Second {
+		app.errorJSON(w, errors.New("refresh token does not need renewed yet"), http.StatusTooEarly)
+		return
+	}
+
+	// get the user id from the claims
+	userID, err := strconv.Atoi(claims.Subject)
+	if err != nil {
+		app.errorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
+	user, err := app.DB.GetUser(userID)
+	if err != nil {
+		app.errorJSON(w, errors.New("unknown user"), http.StatusBadRequest)
+		return
+	}
+
+	tokenPairs, err := app.generateTokenPair(user)
+	if err != nil {
+		app.errorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "__Host-refresh-token",
+		Path:     "/",
+		Value:    tokenPairs.RefreshToken,
+		Expires:  time.Now().Add(refreshTokenExpiry),
+		MaxAge:   int(refreshTokenExpiry.Seconds()),
+		SameSite: http.SameSiteStrictMode,
+		Domain:   "localhost",
+		HttpOnly: true,
+		Secure:   true,
+	})
+
+	_ = app.writeJSON(w, http.StatusOK, tokenPairs)
 }
 
 func (app *application) allUsers(w http.ResponseWriter, r *http.Request) {
