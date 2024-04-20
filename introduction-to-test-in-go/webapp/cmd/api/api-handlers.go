@@ -23,7 +23,7 @@ func (app *application) authenticate(w http.ResponseWriter, r *http.Request) {
 	// read a json payload
 	err := app.readJSON(w, r, &creds)
 	if err != nil {
-		app.errorJSON(w, errors.New("unanuthorized"), http.StatusBadRequest)
+		app.errorJSON(w, errors.New("unauthorized"), http.StatusUnauthorized)
 		return
 	}
 
@@ -47,6 +47,18 @@ func (app *application) authenticate(w http.ResponseWriter, r *http.Request) {
 		app.errorJSON(w, errors.New("unauthorized"), http.StatusUnauthorized)
 		return
 	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "__Host-refresh_token",
+		Path:     "/",
+		Value:    tokenPairs.RefreshToken,
+		Expires:  time.Now().Add(refreshTokenExpiry),
+		MaxAge:   int(refreshTokenExpiry.Seconds()),
+		SameSite: http.SameSiteStrictMode,
+		Domain:   "localhost",
+		HttpOnly: true,
+		Secure:   true,
+	})
 
 	// send token to user
 	_ = app.writeJSON(w, http.StatusOK, tokenPairs)
