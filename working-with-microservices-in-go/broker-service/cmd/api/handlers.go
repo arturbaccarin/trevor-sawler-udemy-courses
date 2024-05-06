@@ -85,10 +85,8 @@ func (app *Config) logItem(w http.ResponseWriter, entry LogPayload) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusAccepted {
-		if err != nil {
-			app.errorJSON(w, err)
-			return
-		}
+		app.errorJSON(w, err)
+		return
 	}
 
 	var payload jsonResponse
