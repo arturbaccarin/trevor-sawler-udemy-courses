@@ -1,10 +1,15 @@
 version: '3'
 
 services:
+
+  front-end:
+    image: arturbaccarin/front-end:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+
   broker-service:
-    image: arturbaccarin/broker-service:1.0.0
-    ports:
-      - "8080:80"
+    image: arturbaccarin/broker-service:1.0.1
     deploy:
       mode: replicated
       replicas: 1
@@ -95,3 +100,5 @@ services:
 # if you need to downgrade, only change de version
 # docker stack rm myapp (to stop all)
 # docker swarm leave --force
+# docker build -f broker-service.dockerfile -t arturbaccarin/broker-service:1.0.1 .
+# docker push arturbaccarin/broker-service:1.0.1
