@@ -2,6 +2,18 @@ version: '3'
 
 services:
 
+  caddy:
+    image: arturbaccarin/micro-caddy:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+
   front-end:
     image: arturbaccarin/front-end:1.0.0
     deploy:
@@ -89,6 +101,12 @@ services:
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data/
 
+volumes:
+  caddy_data:
+    external: true
+  caddy_config:
+
+
 # docker swarm init
 # docker swarm join-token worker
 # docker swarm join-token manager
@@ -102,3 +120,4 @@ services:
 # docker swarm leave --force
 # docker build -f broker-service.dockerfile -t arturbaccarin/broker-service:1.0.1 .
 # docker push arturbaccarin/broker-service:1.0.1
+# docker stack deploy -c swarm.yml myapp
