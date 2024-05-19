@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mongo
+  name: mailhog
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mongo
+      app: mailhog
   template:
     metadata:
       labels:
-        app: mongo
+        app: mailhog
     spec:
       containers: 
-      - name: mongo
-        image: "mongo:4.2.17-bionic"
+      - name: mailhog
+        image: "mailhog/mailhog:latest"
         resources:
           requests:
             memory: "64Mi"
@@ -22,30 +22,28 @@ spec:
           limits:
             memory: "120Mi"
             cpu: "500m"
-        env:
-          - name: MONGO_INITDB_DATABASE
-            value: "logs"
-          - name: MONGO_INITDB_ROOT_USERNAME
-            value: "admin"
-          - name: MONGO_INITDB_ROOT_PASSWORD
-            value: "password"
         ports:
-          - containerPort: 27017
+          - containerPort: 1025
+          - containerPort: 8025
 
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongo
+  name: mailhog
 spec:
   selector:
-    app: mongo
+    app: mailhog
   ports:
     - protocol: TCP
-      name: main-port
-      port: 27017
-      targetPort: 27017
+      name: smtp-port
+      port: 1025
+      targetPort: 1025
+    - protocol: TCP
+      name: web-port
+      port: 8025
+      targetPort: 8025
 
 # deploy:
 # kubectl apply -f k8s
