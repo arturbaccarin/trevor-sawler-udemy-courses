@@ -6,15 +6,15 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: broker-service
+      app: front-end
   template:
     metadata:
       labels:
-        app: broker-service
+        app: front-end
     spec:
       containers: 
-      - name: broker-service
-        image: "arturbaccarin/broker-service:1.0.1"
+      - name: front-end
+        image: "arturbaccarin/front-end:1.0.1"
         resources:
           requests:
             memory: "64Mi"
@@ -22,23 +22,26 @@ spec:
           limits:
             memory: "120Mi"
             cpu: "500m"
+        env:
+          - name: BROKER_URL
+            value: "http://broker-service.info"
         ports:
-          - containerPort: 8080
+          - containerPort: 8081
 
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: broker-service
+  name: front-end
 spec:
   selector:
-    app: broker-service
+    app: front-end
   ports:
     - protocol: TCP
       name: main-port
-      port: 8080
-      targetPort: 8080
+      port: 8081
+      targetPort: 8081
 
 # deploy:
 # kubectl apply -f k8s
@@ -48,3 +51,6 @@ spec:
 # kubectl get svc
 
 # kubeclt expose deployment broker-service --type=LoadBalancer --port=8080 -target-port=8080
+# kubectl apply -f k8s/front-end.yml
+
+# minikube addoons enable ingress
