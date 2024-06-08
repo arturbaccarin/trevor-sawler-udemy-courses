@@ -12,6 +12,7 @@ type Philosopher struct {
 	leftFork  int
 }
 
+// add philosophers 
 var philosophers = []Philosopher{
 	{name: "Plato", leftFork: 4, rightFork: 0},
 	{name: "Socrates", leftFork: 0, rightFork: 1},
