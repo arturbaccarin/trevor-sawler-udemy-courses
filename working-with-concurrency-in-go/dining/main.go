@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// define a philosopher
 type Philosopher struct {
 	name      string
 	rightFork int
