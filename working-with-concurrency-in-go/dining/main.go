@@ -23,9 +23,9 @@ var philosophers = []Philosopher{
 }
 
 var hunger = 3 // how many times does a person eat?
-var eatTime = 1 * time.Second
-var thinkTime = 3 * time.Second
-var sleepTime = 1 * time.Second
+var eatTime = 0 * time.Second
+var thinkTime = 0 * time.Second
+var sleepTime = 0 * time.Second
 
 var orderMutex sync.Mutex
 var orderFinished []string
