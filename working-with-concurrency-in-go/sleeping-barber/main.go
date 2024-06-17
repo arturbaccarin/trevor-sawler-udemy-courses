@@ -23,8 +23,20 @@ func main() {
 	color.Yellow("---------------------------")
 
 	// create channels if we need any
+	clientChan := make(chan string, seatingCapacity)
+	doneChan := make(chan bool)
 
 	// create the barbershop
+	shop := BarberShop{
+		ShopCapacity:    seatingCapacity,
+		HairCutDuration: cutDuration,
+		NumberOfBarbers: 0,
+		ClientsChan:     clientChan,
+		BarbersDoneChan: doneChan,
+		Open:            true,
+	}
+
+	color.Green("the shop is open for the day")
 
 	// add barbers
 
