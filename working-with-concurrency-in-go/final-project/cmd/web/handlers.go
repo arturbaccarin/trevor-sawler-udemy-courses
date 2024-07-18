@@ -66,7 +66,7 @@ func (app *Config) RegisterPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
-	// create a user
+	// create an user
 
 	// send an activation email
 
