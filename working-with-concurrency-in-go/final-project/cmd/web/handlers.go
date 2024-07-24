@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 )
 
 func (app *Config) HomePage(w http.ResponseWriter, r *http.Request) {
@@ -123,10 +124,110 @@ func (app *Config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 
 func (app *Config) ActivateAccount(w http.ResponseWriter, r *http.Request) {
 	// validate url
+	url := r.RequestURI
+	testURL := fmt.Sprintf("http://localhost%s", url)
+
+	okay := VerifyToken(testURL)
+
+	if !okay {
+		app.Session.Put(r.Context(), "error", "Invalid token")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	// activate account
+	u, err := app.Models.User.GetByEmail(r.URL.Query().Get("email"))
+	if err != nil {
+		app.Session.Put(r.Context(), "error", "Invalid token")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	u.Active = 1
+	err = u.Update()
+	if err != nil {
+		app.Session.Put(r.Context(), "error", "unable to update user.")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	app.Session.Put(r.Context(), "flash", "Account activated. You can now log in.")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 	// genereate an invoice
 
 	// send an email with attachments
 
-	// send an email with the invoice attached
+	// subscribe the user to an account
+}
+
+func (app *Config) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
+	// get the id of the plan that is chosen
+	id := r.URL.Query().Get("id")
+
+	planID, _ := strconv.Atoi(id)
+
+	// get the plan from the database
+	plan, err := app.Models.Plan.GetOne(planID)
+	if err != nil {
+		app.Session.Put(r.Context(), "error", "Unable to find plan")
+		http.Redirect(w, r, "/members/plans", http.StatusSeeOther)
+		return
+	}
+
+	// get the user from the session
+	user, ok := app.Session.Get(r.Context(), "user").(data.User)
+	if !ok {
+		app.Session.Put(r.Context(), "error", "Log in first!")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	// generate an invoice and email it
+	app.Wait.Add(1)
+
+	go func() {
+		defer app.Wait.Done()
+
+		invoice, err := app.getInvoice(user, plan)
+		if err != nil {
+			app.ErrorChan <- err
+		}
+
+		msg := Message{
+			To:       user.Email,
+			Subject:  "Your invoice",
+			Data:     invoice,
+			Template: "invoice",
+		}
+
+		app.sendEmail(msg)
+	}()
+
+	// generate a manual
+
+	// send an email with the manual attached
+
+	// subscribe the user to an account
+
+	// redirect
+}
+
+func (app *Config) getInvoice(u data.User, plan *data.Plan) (string, error) {
+	return plan.PlanAmountFormatted, nil
+}
+
+func (app *Config) ChooseSubscription(w http.ResponseWriter, r *http.Request) {
+	plans, err := app.Models.Plan.GetAll()
+	if err != nil {
+		app.ErrorLog.Println(err)
+		return
+	}
+
+	dataMap := make(map[string]any)
+	dataMap["plans"] = plans
+
+	app.render(w, r, "plans.page.gohtml", &TemplateData{
+		Data: dataMap,
+	})
 }
