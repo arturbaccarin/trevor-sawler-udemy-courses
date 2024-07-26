@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"final-project/data"
 	"fmt"
 	"html/template"
@@ -208,6 +209,7 @@ func (app *Config) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
 		app.sendEmail(msg)
 	}()
 
+	// generate manual
 	app.Wait.Add(1)
 	go func() {
 		defer app.Wait.Done()
@@ -224,16 +226,22 @@ func (app *Config) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
 			To:      user.Email,
 			Subject: "Your manual",
 			Data:    "Your user manual is attached.",
+			AttachmentMap: map[string]string{
+				"Manual.pdf": fmt.Sprintf("./tmp/%d_manual.pdf", user.ID),
+			},
 		}
+
+		app.sendEmail(msg)
+
+		// test app error chan
+		app.ErrorChan <- errors.New("some custom error")
 	}()
-
-	// generate a manual
-
-	// send an email with the manual attached
 
 	// subscribe the user to an account
 
 	// redirect
+	app.Session.Put(r.Context(), "flash", "Subscribed!")
+	http.Redirect(w, r, "/members/plans", http.StatusSeeOther)
 }
 
 func (app *Config) generateManual(u data.User, plan *data.Plan) *gofpdf.Fpdf {
