@@ -4,6 +4,7 @@ import (
 	"final-project/data"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -69,5 +70,54 @@ func Test_Pages(t *testing.T) {
 				t.Errorf("%s failed: expected to find %s but got %s", e.name, e.expectedHTML, html)
 			}
 		}
+	}
+}
+
+func TestConfig_PostLoginPage(t *testing.T) {
+	pathToTemplates = "./templates"
+
+	postedData := url.Values{
+		"email":    {"admin@example.com"},
+		"password": {"abc123"},
+	}
+
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/login", strings.NewReader(postedData.Encode()))
+	ctx := getCtx(req)
+	req = req.WithContext(ctx)
+
+	handler := http.HandlerFunc(testApp.PostLoginPage)
+	handler.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusSeeOther {
+		t.Error("wrong code returned")
+	}
+
+	if !testApp.Session.Exists(ctx, "userID") {
+		t.Error("did not find userID in session")
+	}
+}
+
+func TestConfig_SubscribeToPlan(t *testing.T) {
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/subscribe?id=1", nil)
+	ctx := getCtx(req)
+	req = req.WithContext(ctx)
+
+	testApp.Session.Put(ctx, "user", data.User{
+		ID:        1,
+		Email:     "admin@example.com",
+		FirstName: "Admin",
+		LastName:  "User",
+		Active:    1,
+	})
+
+	handler := http.HandlerFunc(testApp.SubscribeToPlan)
+	handler.ServeHTTP(rr, req)
+
+	testApp.Wait.Wait()
+
+	if rr.Code != http.StatusSeeOther {
+		t.Errorf("expected status code of statusseeotehr, but got %d", rr.Code)
 	}
 }
